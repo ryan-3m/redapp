@@ -13,9 +13,9 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { example_api } from './ipc_api/sample_api';
+import { useOpenWindow } from './ipc_api/control_api';
 
 class AppUpdater {
     constructor() {
@@ -28,6 +28,7 @@ class AppUpdater {
 let mainWindow: BrowserWindow | null = null;
 
 ipcMain.on('ipc-example', example_api);
+ipcMain.handle('control-openWindow', useOpenWindow);
 
 if (process.env.NODE_ENV === 'production') {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -74,6 +75,8 @@ const createWindow = async () => {
         show: false,
         width: 1024,
         height: 728,
+        frame: false,
+        transparent: true,
         icon: getAssetPath('icon.png'),
         webPreferences: {
             preload: app.isPackaged
@@ -98,9 +101,6 @@ const createWindow = async () => {
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
-
-    const menuBuilder = new MenuBuilder(mainWindow);
-    menuBuilder.buildMenu();
 
     // Open urls in the user's browser
     mainWindow.webContents.setWindowOpenHandler((edata) => {
